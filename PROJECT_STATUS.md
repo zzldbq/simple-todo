@@ -49,6 +49,7 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - 已准备 Supabase 数据库与 RLS 安全策略：`supabase/schema.sql`。
 - 已创建 Windows 登录/注册界面原型：`login_preview.py`；目前仅做本地输入校验，尚未连接 Supabase。
 - 已加入云端配置模板 `.env.example`、配置读取模块 `cloud_config.py`，并通过 `.gitignore` 排除真实 `.env`。
+- 已整理项目从开始至今的工具与技术说明：`docs/TOOLS.md`，包含用途、项目角色和同类替代工具。
 - 当前使用流量网络，因此暂不下载 Flutter、Android Studio 或其他大型依赖。
 
 ## v2.0.0 计划
@@ -116,5 +117,6 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - 2026-07-08：测试发现登录窗口缩小时会裁掉输入框和按钮；已将最小尺寸修正为 `920×620`，避免控件不可见。
 - 2026-07-08：复测发现注册模式多一组确认密码输入框，`920×620` 仍会裁掉提交按钮；已按注册模式的实际高度调整为 `920×720`。
 - 2026-07-08：准备 Supabase 配置骨架并加入密钥防误传规则；尚未填写任何真实项目地址或密钥。
+- 2026-07-08：完成工具与技术总览文档，区分已使用、已设计未接入、Android 计划工具和企业实践。
 
 下一步：有 Wi-Fi 后安装 Flutter 和 Android 开发环境，创建 Supabase 项目，再复制 `.env.example` 为 `.env` 并接入真实登录。

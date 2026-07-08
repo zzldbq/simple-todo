@@ -43,6 +43,8 @@ Android 客户端（Flutter）─┘
 - 用户只能创建属于自己的任务。
 - 用户只能修改和删除自己的任务。
 - 客户端只能使用可公开的 publishable/anon key，绝不包含 service-role key。
+- 项目提供 `.env.example` 作为配置模板；真实 `.env` 被 Git 忽略。
+- 即使 publishable key 可用于客户端，也必须依靠 RLS 保护每个用户的数据。
 
 ## 同步规则
 

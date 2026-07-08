@@ -6,3 +6,4 @@ tasks.json
 dist/
 build/
 *.spec
+.env

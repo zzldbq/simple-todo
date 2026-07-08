@@ -2,6 +2,19 @@
 
 最后更新：2026-07-08（Asia/Shanghai）
 
+## 新对话快速接续摘要
+
+- 先读取本文件和 `docs/TOOLS.md`，再执行 `git status`。
+- 当前分支是 `develop-v2`，工作区在本次整理时干净；不要在 `main` 上直接开发 2.0。
+- `v1.0.0` Windows 版已发布：https://github.com/zzldbq/simple-todo
+- 2.0 核心目标：邮箱账号、Supabase 云端任务、Windows 与 Android 同步。
+- 已完成：架构文档、Supabase SQL/RLS、Windows 登录注册原型、云配置骨架与工具说明。
+- `login_preview.py` 已把最小尺寸调整为 `920×720`；用户尚未明确确认这次注册界面复测结果。
+- Flutter、Dart、Android Studio、Android SDK、ADB 均未安装；之前因用户使用流量网络而取消下载，未产生完整安装。
+- 下一次开始大型下载前，必须先确认用户已连接 Wi-Fi。
+- 用户不手写代码，希望亲自运行和测试；每个实质步骤更新本文件，并简要解释新工具及 2～4 个同类工具。
+- 当前最合理的下一步：有 Wi-Fi 后安装 Flutter 与 Android 环境；无网络时不再堆叠模拟代码。
+
 ## 项目目标
 
 这是一个用于学习完整软件开发流程的项目。用户不打算手写代码，而是希望在指导下亲自完成环境配置、运行、测试、打包和发布。

@@ -16,9 +16,9 @@ class AuthPreview:
     def __init__(self, window: tk.Tk) -> None:
         self.window = window
         self.window.title("简单待办 - 账号")
-        self.window.geometry("920x620")
+        self.window.geometry("920x720")
         # 登录卡片在注册模式下需要完整显示三组输入框和两个按钮。
-        self.window.minsize(920, 620)
+        self.window.minsize(920, 720)
         self.window.configure(bg=BG)
         self.mode = "login"
         self._build()

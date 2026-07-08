@@ -101,12 +101,10 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 
 ## 尚未安装
 
-- Flutter SDK
-- Dart（会随 Flutter 提供）
 - Android Studio
 - Android SDK / ADB
 
-此前检查确认这些命令均不可用。曾准备下载 Flutter 3.44.4 稳定版，但用户当时使用流量网络并取消授权，因此下载和安装没有完成。等用户有 Wi-Fi 后再继续；预计下载数 GB。
+Flutter 3.44.4 与 Dart 3.12.2 已安装到 `D:\AndroidDev\flutter`，并为当前用户配置 PATH、`PUB_HOSTED_URL=https://pub.flutter-io.cn` 和 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`。安装时原始 Google 下载源过慢，切换到 Flutter 官方文档列出的 CFUG 镜像；一次并发残留导致压缩包校验失败，已删除损坏文件、完整重下，并通过官方 SHA-256 校验。首次运行时 GitHub 标签更新发生一次 SSL 超时，但 Flutter 与 Dart 版本验证成功。
 
 ## 重要约定
 
@@ -131,5 +129,6 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - 2026-07-08：复测发现注册模式多一组确认密码输入框，`920×620` 仍会裁掉提交按钮；已按注册模式的实际高度调整为 `920×720`。
 - 2026-07-08：准备 Supabase 配置骨架并加入密钥防误传规则；尚未填写任何真实项目地址或密钥。
 - 2026-07-08：完成工具与技术总览文档，区分已使用、已设计未接入、Android 计划工具和企业实践。
+- 2026-07-08：在 D 盘安装 Flutter 3.44.4 和 Dart 3.12.2，配置 PATH 与 CFUG 镜像；未放入项目目录。
 
 下一步：有 Wi-Fi 后安装 Flutter 和 Android 开发环境，创建 Supabase 项目，再复制 `.env.example` 为 `.env` 并接入真实登录。

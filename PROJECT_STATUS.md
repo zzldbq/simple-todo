@@ -44,7 +44,10 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 
 - 当前本地开发分支：`develop-v2`
 - `main` 和 `v1.0.0` 应保持稳定，不直接用于未完成的 2.0 开发。
-- 2.0 尚未开始修改业务代码。
+- 2.0 尚未开始修改客户端业务代码。
+- 已完成 v2.0 系统设计：`docs/V2_DESIGN.md`。
+- 已准备 Supabase 数据库与 RLS 安全策略：`supabase/schema.sql`。
+- 当前使用流量网络，因此暂不下载 Flutter、Android Studio 或其他大型依赖。
 
 ## v2.0.0 计划
 
@@ -63,7 +66,7 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 3. 在小米手机启用开发者选项和 USB 调试，并用 ADB 验证连接。
 4. 创建 Flutter Android 项目。
 5. 创建 Supabase 项目。
-6. 设计用户和任务数据表，配置安全策略。
+6. 在 Supabase 执行已准备的 `supabase/schema.sql`，检查任务表与安全策略。
 7. 实现注册、登录和退出。
 8. 实现 Android 端任务增删改查与云同步。
 9. 让 Windows 版接入同一云端数据。
@@ -102,3 +105,9 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 ## 下次继续方式
 
 新对话开始时先读取本文件，并检查 Git 当前分支和工作区状态。用户说“继续开发 2.0”后，从 Flutter 和 Android 开发环境安装开始。下载前确认用户已连接 Wi-Fi。
+
+## 最近完成
+
+- 2026-07-08：在不下载依赖的情况下完成 v2.0 架构、账号方案、同步规则、本地迁移策略与数据库安全设计。
+
+下一步：有 Wi-Fi 后安装 Flutter 和 Android 开发环境；如果仍使用流量，可继续审查交互流程或准备 Windows 登录界面结构。

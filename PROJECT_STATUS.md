@@ -10,8 +10,8 @@
 - 2.0 核心目标：邮箱账号、Supabase 云端任务、Windows 与 Android 同步。
 - 已完成：架构文档、Supabase SQL/RLS、Windows 登录注册原型、云配置骨架与工具说明。
 - `login_preview.py` 已把最小尺寸调整为 `920×720`；用户尚未明确确认这次注册界面复测结果。
-- Flutter、Dart、Android Studio、Android SDK、ADB 均未安装；之前因用户使用流量网络而取消下载，未产生完整安装。
-- 下一次开始大型下载前，必须先确认用户已连接 Wi-Fi。
+- Flutter、Dart、Android Studio、Android SDK、ADB 已安装到 `D:\AndroidDev`，并通过 `flutter doctor` 的 Android toolchain 检查。
+- 当前 Android 阶段下一步：用小米手机开启开发者选项与 USB 调试，连接电脑后用 ADB 验证真机。
 - 用户不手写代码，希望亲自运行和测试；每个实质步骤更新本文件，并简要解释新工具及 2～4 个同类工具。
 - 当前最合理的下一步：有 Wi-Fi 后安装 Flutter 与 Android 环境；无网络时不再堆叠模拟代码。
 
@@ -63,7 +63,7 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - 已创建 Windows 登录/注册界面原型：`login_preview.py`；目前仅做本地输入校验，尚未连接 Supabase。
 - 已加入云端配置模板 `.env.example`、配置读取模块 `cloud_config.py`，并通过 `.gitignore` 排除真实 `.env`。
 - 已整理项目从开始至今的工具与技术说明：`docs/TOOLS.md`，包含用途、项目角色和同类替代工具。
-- 当前使用流量网络，因此暂不下载 Flutter、Android Studio 或其他大型依赖。
+- Android 开发环境已完成：Flutter、Dart、Android Studio、Android SDK、ADB 均位于 D 盘。
 
 ## v2.0.0 计划
 
@@ -77,9 +77,9 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 
 计划顺序：
 
-1. 安装 Flutter SDK。
-2. 安装 Android Studio 和 Android SDK；不安装模拟器，优先使用小米真机测试。
-3. 在小米手机启用开发者选项和 USB 调试，并用 ADB 验证连接。
+1. 安装 Flutter SDK。（已完成）
+2. 安装 Android Studio 和 Android SDK；不安装模拟器，优先使用小米真机测试。（已完成）
+3. 在小米手机启用开发者选项和 USB 调试，并用 ADB 验证连接。（下一步）
 4. 创建 Flutter Android 项目。
 5. 创建 Supabase 项目。
 6. 在 Supabase 执行已准备的 `supabase/schema.sql`，检查任务表与安全策略。
@@ -97,16 +97,20 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - PyCharm：`D:\PyCharm\PyCharm 2023.2.5`
 - Python 虚拟环境：`C:\Users\zzl\Desktop\learning\simple-todo\venv`
 - Windows EXE：`C:\Users\zzl\Desktop\learning\simple-todo\dist\SimpleTodo.exe`
-- 计划将 Android 工具安装到：`D:\AndroidDev`
+- Android 工具根目录：`D:\AndroidDev`
+- Flutter SDK：`D:\AndroidDev\flutter`
+- Android Studio：`D:\AndroidDev\AndroidStudio`
+- Android SDK：`D:\AndroidDev\AndroidSdk`
+- ADB：`D:\AndroidDev\AndroidSdk\platform-tools\adb.exe`
+- Java / JDK：`D:\AndroidDev\AndroidStudio\jbr`
 
-## 尚未安装
-
-- Android Studio
-- Android SDK / ADB
+## Android 开发环境状态
 
 Flutter 3.44.4 与 Dart 3.12.2 已安装到 `D:\AndroidDev\flutter`，并为当前用户配置 PATH、`PUB_HOSTED_URL=https://pub.flutter-io.cn` 和 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`。安装时原始 Google 下载源过慢，切换到 Flutter 官方文档列出的 CFUG 镜像；一次并发残留导致压缩包校验失败，已删除损坏文件、完整重下，并通过官方 SHA-256 校验。首次运行时 GitHub 标签更新发生一次 SSL 超时，但 Flutter 与 Dart 版本验证成功。
 
-Android Studio Quail 1（2026.1.1 Patch 2）安装包已完整下载到 `D:\AndroidDev\downloads\android-studio-quail1-patch2-windows.exe`，并通过 Google 公布的 SHA-256 校验。尝试静默安装时安装器未接受静默参数，当前停留在 `Android Studio Setup` 图形向导，尚未完成安装；目标仍计划为 `D:\AndroidDev\AndroidStudio`，Android SDK 计划为 `D:\AndroidDev\AndroidSdk`。
+Android Studio Quail 1（2026.1.1 Patch 2）安装包已完整下载到 `D:\AndroidDev\downloads\android-studio-quail1-patch2-windows.exe`，并通过 Google 公布的 SHA-256 校验。静默安装未成功，后由图形安装向导安装到 `D:\AndroidDev\AndroidStudio`。
+
+Android SDK command line tools、`platform-tools`、`platforms;android-36`、`build-tools;36.0.0` 已安装到 `D:\AndroidDev\AndroidSdk`。已接受 Android SDK License。当前用户环境变量已配置 `ANDROID_HOME`、`ANDROID_SDK_ROOT`、`JAVA_HOME` 和相关 PATH。`flutter doctor -v` 显示 Android toolchain 通过；剩余的 Visual Studio 缺失只影响 Flutter Windows 桌面开发，当前 Android 阶段暂不处理。
 
 ## 重要约定
 
@@ -121,7 +125,7 @@ Android Studio Quail 1（2026.1.1 Patch 2）安装包已完整下载到 `D:\Andr
 
 ## 下次继续方式
 
-新对话开始时先读取本文件，并检查 Git 当前分支和工作区状态。用户说“继续开发 2.0”后，从 Flutter 和 Android 开发环境安装开始。下载前确认用户已连接 Wi-Fi。
+新对话开始时先读取本文件，并检查 Git 当前分支和工作区状态。用户说“继续开发 2.0”后，从小米手机 USB 调试与 ADB 真机连接验证开始；Android 开发环境已经装好。
 
 ## 最近完成
 
@@ -133,5 +137,6 @@ Android Studio Quail 1（2026.1.1 Patch 2）安装包已完整下载到 `D:\Andr
 - 2026-07-08：完成工具与技术总览文档，区分已使用、已设计未接入、Android 计划工具和企业实践。
 - 2026-07-08：在 D 盘安装 Flutter 3.44.4 和 Dart 3.12.2，配置 PATH 与 CFUG 镜像；未放入项目目录。
 - 2026-07-09：Android Studio 官方安装包下载并校验完成；图形安装向导正在等待用户确认后继续。
+- 2026-07-09：Android Studio 已安装到 `D:\AndroidDev\AndroidStudio`；Android SDK 与 ADB 已安装到 `D:\AndroidDev\AndroidSdk`；`flutter doctor -v` 的 Android toolchain 检查已通过，ADB 版本为 `37.0.0-14910828`。
 
-下一步：有 Wi-Fi 后安装 Flutter 和 Android 开发环境，创建 Supabase 项目，再复制 `.env.example` 为 `.env` 并接入真实登录。
+下一步：在小米手机上开启开发者选项和 USB 调试，连接电脑后用 `adb devices` 验证真机；之后创建 Flutter Android 项目。

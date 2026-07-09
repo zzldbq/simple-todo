@@ -124,37 +124,43 @@
 - 项目作用：保证每个用户只能读写自己的任务。
 - 同类方案：后端 API 权限校验、数据库视图与权限、应用层访问控制。
 
-## 三、Android 阶段计划使用，尚未安装
+## 三、Android 阶段工具
 
 ### Flutter
 
 - 是什么：Google 推出的跨平台 UI 应用框架。
-- 项目作用：用一套主要代码开发 Android 客户端，未来也可复用到 iOS。
+- 项目作用：用一套主要代码开发 Android 客户端，未来也可复用到 iOS；已安装到 `D:\AndroidDev\flutter`。
 - 同类工具：React Native、.NET MAUI、Kotlin Multiplatform、原生 Kotlin/Swift。
 
 ### Dart
 
 - 是什么：Flutter 使用的编程语言，会随 Flutter SDK 提供。
-- 项目作用：编写 Android 客户端的界面和业务逻辑。
+- 项目作用：编写 Android 客户端的界面和业务逻辑；已随 Flutter 安装。
 - 同类语言：Kotlin、Swift、TypeScript、C#。
 
 ### Android Studio
 
 - 是什么：Google 官方 Android 集成开发环境。
-- 项目作用：提供 Android SDK 管理、项目检查、设备调试和打包支持。
+- 项目作用：提供 Android SDK 管理、项目检查、设备调试和打包支持；已安装到 `D:\AndroidDev\AndroidStudio`。
 - 同类工具：IntelliJ IDEA、VS Code；开发 Android 仍需 Android SDK。
 
 ### Android SDK
 
 - 是什么：Android 官方开发工具与系统 API 集合。
-- 项目作用：编译、调试并生成手机可安装的 APK。
+- 项目作用：编译、调试并生成手机可安装的 APK；已安装到 `D:\AndroidDev\AndroidSdk`。
 - 同类方案：没有完全等价替代品；所有正规 Android 工具最终都依赖它。
 
 ### ADB
 
 - 是什么：Android Debug Bridge，Android 设备调试命令工具。
-- 项目作用：确认小米手机连接、安装测试 APK、读取调试信息。
+- 项目作用：确认小米手机连接、安装测试 APK、读取调试信息；已随 Android SDK 安装。
 - 同类方式：Android Studio 图形设备管理；底层仍通常调用 ADB。
+
+### sdkmanager
+
+- 是什么：Android SDK 的命令行包管理器。
+- 项目作用：下载并管理 `platform-tools`、Android 平台和 build-tools。
+- 同类工具：Xcode Components、Visual Studio Installer、包管理器如 npm/pip（概念类似）。
 
 ## 四、计划加入的企业实践
 

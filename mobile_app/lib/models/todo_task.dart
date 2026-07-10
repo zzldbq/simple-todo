@@ -54,6 +54,28 @@ class TodoTask {
     );
   }
 
+  factory TodoTask.fromJson(Map<String, dynamic> json) {
+    return TodoTask(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      dueAt: json['dueAt'] == null
+          ? null
+          : DateTime.parse(json['dueAt'] as String).toLocal(),
+      reminder: json['reminder'] as bool? ?? false,
+      completed: json['completed'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'dueAt': dueAt?.toUtc().toIso8601String(),
+      'reminder': reminder,
+      'completed': completed,
+    };
+  }
+
   Map<String, dynamic> toSupabaseInsert(String userId) {
     return {
       'user_id': userId,

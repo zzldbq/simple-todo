@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_todo_mobile/main.dart';
 
 void main() {
@@ -12,10 +13,12 @@ void main() {
   });
 
   testWidgets('can add and delete a local task', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+
     await tester.pumpWidget(
       const MaterialApp(home: TaskHomePage()),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(EditableText), '买牛奶');
     await tester.tap(find.text('添加任务'));

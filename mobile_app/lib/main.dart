@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/todo_task.dart';
-import 'repositories/memory_task_repository.dart';
+import 'repositories/local_task_repository.dart';
 import 'repositories/supabase_task_repository.dart';
 import 'repositories/task_repository.dart';
 
@@ -309,7 +309,7 @@ class _TaskHomePageState extends State<TaskHomePage> {
         Supabase.instance.client.auth.currentUser != null;
     _taskRepository = canUseSupabase
         ? SupabaseTaskRepository(Supabase.instance.client)
-        : MemoryTaskRepository();
+        : LocalTaskRepository();
     _loadTasks();
   }
 

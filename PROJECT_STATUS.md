@@ -57,13 +57,14 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 
 - 当前本地开发分支：`develop-v2`
 - `main` 和 `v1.0.0` 应保持稳定，不直接用于未完成的 2.0 开发。
-- 2.0 尚未开始修改客户端业务代码。
+- 2.0 已创建 Android 手机端 Flutter 项目骨架，并完成第一版静态首页雏形。
 - 已完成 v2.0 系统设计：`docs/V2_DESIGN.md`。
 - 已准备 Supabase 数据库与 RLS 安全策略：`supabase/schema.sql`。
 - 已创建 Windows 登录/注册界面原型：`login_preview.py`；目前仅做本地输入校验，尚未连接 Supabase。
 - 已加入云端配置模板 `.env.example`、配置读取模块 `cloud_config.py`，并通过 `.gitignore` 排除真实 `.env`。
 - 已整理项目从开始至今的工具与技术说明：`docs/TOOLS.md`，包含用途、项目角色和同类替代工具。
 - Android 开发环境已完成：Flutter、Dart、Android Studio、Android SDK、ADB 均位于 D 盘。
+- 当前用户使用流量网络，遇到需要联网下载依赖或大型资源时必须先提醒并暂停。
 
 ## v2.0.0 计划
 
@@ -79,8 +80,8 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 
 1. 安装 Flutter SDK。（已完成）
 2. 安装 Android Studio 和 Android SDK；不安装模拟器，优先使用小米真机测试。（已完成）
-3. 在小米手机启用开发者选项和 USB 调试，并用 ADB 验证连接。（下一步）
-4. 创建 Flutter Android 项目。
+3. 在小米手机启用开发者选项和 USB 调试，并用 ADB 验证连接。（手机暂不可连接，后续补做）
+4. 创建 Flutter Android 项目。（已完成）
 5. 创建 Supabase 项目。
 6. 在 Supabase 执行已准备的 `supabase/schema.sql`，检查任务表与安全策略。
 7. 实现注册、登录和退出。
@@ -103,6 +104,8 @@ Windows 版使用 Python 3.12 和 Tkinter 开发，已实现：
 - Android SDK：`D:\AndroidDev\AndroidSdk`
 - ADB：`D:\AndroidDev\AndroidSdk\platform-tools\adb.exe`
 - Java / JDK：`D:\AndroidDev\AndroidStudio\jbr`
+- Android 手机端项目：`C:\Users\zzl\Desktop\learning\simple-todo\mobile_app`
+- Android 手机端入口：`C:\Users\zzl\Desktop\learning\simple-todo\mobile_app\lib\main.dart`
 
 ## Android 开发环境状态
 
@@ -125,7 +128,7 @@ Android SDK command line tools、`platform-tools`、`platforms;android-36`、`bu
 
 ## 下次继续方式
 
-新对话开始时先读取本文件，并检查 Git 当前分支和工作区状态。用户说“继续开发 2.0”后，从小米手机 USB 调试与 ADB 真机连接验证开始；Android 开发环境已经装好。
+新对话开始时先读取本文件，并检查 Git 当前分支和工作区状态。用户说“继续开发 2.0”后，如果手机仍不可连接，就继续完善 `mobile_app` 的界面与本地逻辑；如果手机可连接，再做小米手机 USB 调试与 ADB 真机连接验证。Android 开发环境已经装好。
 
 ## 最近完成
 
@@ -138,5 +141,7 @@ Android SDK command line tools、`platform-tools`、`platforms;android-36`、`bu
 - 2026-07-08：在 D 盘安装 Flutter 3.44.4 和 Dart 3.12.2，配置 PATH 与 CFUG 镜像；未放入项目目录。
 - 2026-07-09：Android Studio 官方安装包下载并校验完成；图形安装向导正在等待用户确认后继续。
 - 2026-07-09：Android Studio 已安装到 `D:\AndroidDev\AndroidStudio`；Android SDK 与 ADB 已安装到 `D:\AndroidDev\AndroidSdk`；`flutter doctor -v` 的 Android toolchain 检查已通过，ADB 版本为 `37.0.0-14910828`。
+- 2026-07-10：创建 Flutter Android 手机端项目 `mobile_app`，包名基础为 `com.zzldbq`，并将默认计数器页面替换为“简单待办”手机版首页雏形，包含标题、添加任务输入区和示例任务列表。
+- 2026-07-10：由于当前使用流量网络且 Flutter/Dart 本地命令 `flutter analyze`、`dart format` 均超时，暂未完成静态分析和格式化验证；后续网络/缓存稳定后优先补跑。
 
-下一步：在小米手机上开启开发者选项和 USB 调试，连接电脑后用 `adb devices` 验证真机；之后创建 Flutter Android 项目。
+下一步：在不下载大型依赖的前提下继续完善手机版 UI；网络稳定后补跑 `dart format`、`flutter analyze` 和 `flutter test`。手机可连接后再用 `adb devices` 验证真机。

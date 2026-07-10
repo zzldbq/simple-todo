@@ -139,17 +139,53 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-class TaskHomePage extends StatelessWidget {
+class TaskHomePage extends StatefulWidget {
   const TaskHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final tasks = [
-      const TaskItem('学习 Flutter 页面结构', '今天 20:00'),
-      const TaskItem('接入 Supabase 登录', '计划中'),
-      const TaskItem('测试电脑手机同步', '计划中'),
-    ];
+  State<TaskHomePage> createState() => _TaskHomePageState();
+}
 
+class _TaskHomePageState extends State<TaskHomePage> {
+  final TextEditingController _taskController = TextEditingController();
+  final List<TodoTask> _tasks = [
+    TodoTask('学习 Flutter 页面结构', '今天 20:00'),
+    TodoTask('接入 Supabase 登录', '计划中'),
+    TodoTask('测试电脑手机同步', '计划中'),
+  ];
+
+  @override
+  void dispose() {
+    _taskController.dispose();
+    super.dispose();
+  }
+
+  void _addTask() {
+    final title = _taskController.text.trim();
+    if (title.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _tasks.insert(0, TodoTask(title, '未设置时间'));
+      _taskController.clear();
+    });
+  }
+
+  void _toggleTask(int index) {
+    setState(() {
+      _tasks[index].isDone = !_tasks[index].isDone;
+    });
+  }
+
+  void _deleteTask(int index) {
+    setState(() {
+      _tasks.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('简单待办'),
@@ -164,15 +200,17 @@ class TaskHomePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const TextField(
-            decoration: InputDecoration(
+          TextField(
+            controller: _taskController,
+            decoration: const InputDecoration(
               labelText: '输入新任务',
               border: OutlineInputBorder(),
             ),
+            onSubmitted: (_) => _addTask(),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: null,
+            onPressed: _addTask,
             icon: const Icon(Icons.add),
             label: const Text('添加任务'),
           ),
@@ -182,26 +220,66 @@ class TaskHomePage extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          ...tasks,
+          if (_tasks.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 32),
+              child: Center(child: Text('暂无任务')),
+            )
+          else
+            for (var index = 0; index < _tasks.length; index++)
+              TaskItem(
+                task: _tasks[index],
+                onToggle: () => _toggleTask(index),
+                onDelete: () => _deleteTask(index),
+              ),
         ],
       ),
     );
   }
 }
 
-class TaskItem extends StatelessWidget {
-  const TaskItem(this.title, this.time, {super.key});
+class TodoTask {
+  TodoTask(this.title, this.time, {this.isDone = false});
 
   final String title;
   final String time;
+  bool isDone;
+}
+
+class TaskItem extends StatelessWidget {
+  const TaskItem({
+    super.key,
+    required this.task,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  final TodoTask task;
+  final VoidCallback onToggle;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.radio_button_unchecked),
-        title: Text(title),
-        subtitle: Text(time),
+        leading: IconButton(
+          onPressed: onToggle,
+          icon: Icon(
+            task.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+          ),
+        ),
+        title: Text(
+          task.title,
+          style: TextStyle(
+            decoration: task.isDone ? TextDecoration.lineThrough : null,
+          ),
+        ),
+        subtitle: Text(task.time),
+        trailing: IconButton(
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline),
+          tooltip: '删除',
+        ),
       ),
     );
   }

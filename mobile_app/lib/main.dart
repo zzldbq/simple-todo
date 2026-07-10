@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'models/todo_task.dart';
+import 'repositories/memory_task_repository.dart';
+import 'repositories/supabase_task_repository.dart';
+import 'repositories/task_repository.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -292,11 +297,21 @@ class TaskHomePage extends StatefulWidget {
 
 class _TaskHomePageState extends State<TaskHomePage> {
   final TextEditingController _taskController = TextEditingController();
-  final List<TodoTask> _tasks = [
-    TodoTask('学习 Flutter 页面结构', '今天 20:00'),
-    TodoTask('接入 Supabase 登录', '计划中'),
-    TodoTask('测试电脑手机同步', '计划中'),
-  ];
+  late final TaskRepository _taskRepository;
+  List<TodoTask> _tasks = [];
+  bool _isLoadingTasks = true;
+  String? _taskError;
+
+  @override
+  void initState() {
+    super.initState();
+    final canUseSupabase = SupabaseConfig.isConfigured &&
+        Supabase.instance.client.auth.currentUser != null;
+    _taskRepository = canUseSupabase
+        ? SupabaseTaskRepository(Supabase.instance.client)
+        : MemoryTaskRepository();
+    _loadTasks();
+  }
 
   @override
   void dispose() {
@@ -304,28 +319,88 @@ class _TaskHomePageState extends State<TaskHomePage> {
     super.dispose();
   }
 
-  void _addTask() {
+  Future<void> _loadTasks() async {
+    try {
+      final tasks = await _taskRepository.listTasks();
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _tasks = tasks;
+        _taskError = null;
+        _isLoadingTasks = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _taskError = '任务加载失败';
+        _isLoadingTasks = false;
+      });
+    }
+  }
+
+  Future<void> _addTask() async {
     final title = _taskController.text.trim();
     if (title.isEmpty) {
       return;
     }
 
-    setState(() {
-      _tasks.insert(0, TodoTask(title, '未设置时间'));
+    try {
+      final task = await _taskRepository.addTask(title);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() => _tasks = [task, ..._tasks]);
       _taskController.clear();
-    });
+    } catch (_) {
+      _showTaskError('添加任务失败');
+    }
   }
 
-  void _toggleTask(int index) {
-    setState(() {
-      _tasks[index].isDone = !_tasks[index].isDone;
-    });
+  Future<void> _toggleTask(TodoTask task) async {
+    try {
+      final updated = await _taskRepository.toggleTask(task);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _tasks = [
+          for (final item in _tasks) item.id == updated.id ? updated : item,
+        ];
+      });
+    } catch (_) {
+      _showTaskError('更新任务失败');
+    }
   }
 
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  Future<void> _deleteTask(TodoTask task) async {
+    try {
+      await _taskRepository.deleteTask(task);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _tasks = [
+          for (final item in _tasks)
+            if (item.id != task.id) item,
+        ];
+      });
+    } catch (_) {
+      _showTaskError('删除任务失败');
+    }
+  }
+
+  void _showTaskError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -364,30 +439,32 @@ class _TaskHomePageState extends State<TaskHomePage> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          if (_tasks.isEmpty)
+          if (_isLoadingTasks)
+            const Padding(
+              padding: EdgeInsets.only(top: 32),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_taskError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 32),
+              child: Center(child: Text(_taskError!)),
+            )
+          else if (_tasks.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 32),
               child: Center(child: Text('暂无任务')),
             )
           else
-            for (var index = 0; index < _tasks.length; index++)
+            for (final task in _tasks)
               TaskItem(
-                task: _tasks[index],
-                onToggle: () => _toggleTask(index),
-                onDelete: () => _deleteTask(index),
+                task: task,
+                onToggle: () => _toggleTask(task),
+                onDelete: () => _deleteTask(task),
               ),
         ],
       ),
     );
   }
-}
-
-class TodoTask {
-  TodoTask(this.title, this.time, {this.isDone = false});
-
-  final String title;
-  final String time;
-  bool isDone;
 }
 
 class TaskItem extends StatelessWidget {
@@ -409,16 +486,16 @@ class TaskItem extends StatelessWidget {
         leading: IconButton(
           onPressed: onToggle,
           icon: Icon(
-            task.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+            task.completed ? Icons.check_circle : Icons.radio_button_unchecked,
           ),
         ),
         title: Text(
           task.title,
           style: TextStyle(
-            decoration: task.isDone ? TextDecoration.lineThrough : null,
+            decoration: task.completed ? TextDecoration.lineThrough : null,
           ),
         ),
-        subtitle: Text(task.time),
+        subtitle: Text(task.displayTime),
         trailing: IconButton(
           onPressed: onDelete,
           icon: const Icon(Icons.delete_outline),

@@ -15,6 +15,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: TaskHomePage()),
     );
+    await tester.pump();
 
     await tester.enterText(find.byType(EditableText), '买牛奶');
     await tester.tap(find.text('添加任务'));

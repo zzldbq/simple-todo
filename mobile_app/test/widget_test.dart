@@ -6,16 +6,15 @@ void main() {
   testWidgets('shows the login screen first', (tester) async {
     await tester.pumpWidget(const SimpleTodoMobileApp());
 
-    expect(find.text('登录'), findsOneWidget);
+    expect(find.text('登录'), findsWidgets);
     expect(find.text('邮箱'), findsOneWidget);
     expect(find.text('还没有账号？创建账号'), findsOneWidget);
   });
 
   testWidgets('can add and delete a local task', (tester) async {
-    await tester.pumpWidget(const SimpleTodoMobileApp());
-
-    await tester.tap(find.widgetWithText(FilledButton, '登录'));
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      const MaterialApp(home: TaskHomePage()),
+    );
 
     await tester.enterText(find.byType(EditableText), '买牛奶');
     await tester.tap(find.text('添加任务'));

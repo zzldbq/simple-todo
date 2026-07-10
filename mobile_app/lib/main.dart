@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    );
+  }
+
   runApp(const SimpleTodoMobileApp());
+}
+
+class SupabaseConfig {
+  static const url = String.fromEnvironment('SUPABASE_URL');
+  static const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  static bool get isConfigured => url.isNotEmpty && anonKey.isNotEmpty;
 }
 
 class SimpleTodoMobileApp extends StatelessWidget {
@@ -26,8 +43,64 @@ class SimpleTodoMobileApp extends StatelessWidget {
   }
 }
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('请填写邮箱和密码');
+      return;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      _showMessage('尚未配置 Supabase，暂时无法真实登录');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on AuthException catch (error) {
+      _showMessage(error.message);
+    } catch (_) {
+      _showMessage('登录失败，请稍后再试');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +108,21 @@ class LoginPage extends StatelessWidget {
       title: '登录',
       subtitle: '登录后可在电脑和手机同步任务',
       children: [
-        const TextField(
-          decoration: InputDecoration(labelText: '邮箱'),
+        TextField(
+          controller: _emailController,
+          decoration: const InputDecoration(labelText: '邮箱'),
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 12),
-        const TextField(
-          decoration: InputDecoration(labelText: '密码'),
+        TextField(
+          controller: _passwordController,
+          decoration: const InputDecoration(labelText: '密码'),
           obscureText: true,
         ),
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-          child: const Text('登录'),
+          onPressed: _isLoading ? null : _login,
+          child: Text(_isLoading ? '登录中...' : '登录'),
         ),
         TextButton(
           onPressed: () => Navigator.pushNamed(context, '/register'),
@@ -58,8 +133,74 @@ class LoginPage extends StatelessWidget {
   }
 }
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      _showMessage('请完整填写注册信息');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage('两次密码不一致');
+      return;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      _showMessage('尚未配置 Supabase，暂时无法真实注册');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+      _showMessage('注册成功，请检查邮箱或直接登录');
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } on AuthException catch (error) {
+      _showMessage(error.message);
+    } catch (_) {
+      _showMessage('注册失败，请稍后再试');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,24 +208,27 @@ class RegisterPage extends StatelessWidget {
       title: '创建账号',
       subtitle: '之后会接入 Supabase 账号系统',
       children: [
-        const TextField(
-          decoration: InputDecoration(labelText: '邮箱'),
+        TextField(
+          controller: _emailController,
+          decoration: const InputDecoration(labelText: '邮箱'),
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 12),
-        const TextField(
-          decoration: InputDecoration(labelText: '密码'),
+        TextField(
+          controller: _passwordController,
+          decoration: const InputDecoration(labelText: '密码'),
           obscureText: true,
         ),
         const SizedBox(height: 12),
-        const TextField(
-          decoration: InputDecoration(labelText: '确认密码'),
+        TextField(
+          controller: _confirmPasswordController,
+          decoration: const InputDecoration(labelText: '确认密码'),
           obscureText: true,
         ),
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-          child: const Text('注册'),
+          onPressed: _isLoading ? null : _register,
+          child: Text(_isLoading ? '注册中...' : '注册'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),

@@ -26,7 +26,9 @@ class LocalTaskRepository implements TaskRepository {
     }
 
     return rawTasks
-        .map((raw) => TodoTask.fromJson(jsonDecode(raw) as Map<String, dynamic>))
+        .map(
+          (raw) => TodoTask.fromJson(jsonDecode(raw) as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -62,9 +64,7 @@ class LocalTaskRepository implements TaskRepository {
 
   Future<void> _save(List<TodoTask> tasks) async {
     final prefs = await SharedPreferences.getInstance();
-    final rawTasks = [
-      for (final task in tasks) jsonEncode(task.toJson()),
-    ];
+    final rawTasks = [for (final task in tasks) jsonEncode(task.toJson())];
     await prefs.setStringList(_storageKey, rawTasks);
   }
 }

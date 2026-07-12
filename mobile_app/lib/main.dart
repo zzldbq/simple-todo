@@ -12,7 +12,7 @@ Future<void> main() async {
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
       url: SupabaseConfig.url,
-      anonKey: SupabaseConfig.anonKey,
+      publishableKey: SupabaseConfig.anonKey,
     );
   }
 
@@ -102,9 +102,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -202,9 +202,9 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -271,8 +271,8 @@ class AuthScaffold extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(subtitle),
@@ -305,7 +305,8 @@ class _TaskHomePageState extends State<TaskHomePage> {
   @override
   void initState() {
     super.initState();
-    final canUseSupabase = SupabaseConfig.isConfigured &&
+    final canUseSupabase =
+        SupabaseConfig.isConfigured &&
         Supabase.instance.client.auth.currentUser != null;
     _taskRepository = canUseSupabase
         ? SupabaseTaskRepository(Supabase.instance.client)
@@ -398,9 +399,9 @@ class _TaskHomePageState extends State<TaskHomePage> {
   }
 
   void _showTaskError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -434,10 +435,7 @@ class _TaskHomePageState extends State<TaskHomePage> {
             label: const Text('添加任务'),
           ),
           const SizedBox(height: 24),
-          Text(
-            '我的任务',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('我的任务', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           if (_isLoadingTasks)
             const Padding(

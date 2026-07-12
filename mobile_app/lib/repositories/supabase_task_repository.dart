@@ -15,9 +15,7 @@ class SupabaseTaskRepository implements TaskRepository {
         .select()
         .order('created_at', ascending: false);
 
-    return rows
-        .map((row) => TodoTask.fromSupabase(row as Map<String, dynamic>))
-        .toList();
+    return rows.map(TodoTask.fromSupabase).toList();
   }
 
   @override

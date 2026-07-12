@@ -15,9 +15,7 @@ void main() {
   testWidgets('can add and delete a local task', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await tester.pumpWidget(
-      const MaterialApp(home: TaskHomePage()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: TaskHomePage()));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(EditableText), '买牛奶');

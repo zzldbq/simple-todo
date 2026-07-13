@@ -9,6 +9,9 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 from uuid import uuid4
 
+from cloud_config import load_cloud_config
+from cloud_tasks import CloudTaskClient, CloudTaskError
+
 
 BG = "#F6F7FB"
 CARD = "#FFFFFF"
@@ -41,6 +44,8 @@ class TodoApp:
         self.editing_task_id: str | None = None
         self.current_filter = "all"
         self.nav_buttons: dict[str, tk.Button] = {}
+        self.cloud_config = load_cloud_config()
+        self.cloud_client: CloudTaskClient | None = None
 
         self._configure_styles()
         self._build_layout()
@@ -79,6 +84,45 @@ class TodoApp:
             button.pack(fill="x", padx=12, pady=3)
             self.nav_buttons[filter_name] = button
         self._update_navigation()
+
+        account = tk.Frame(sidebar, bg=CARD, padx=18, pady=18)
+        account.pack(side="bottom", fill="x")
+        tk.Label(account, text="云同步账号", bg=CARD, fg=TEXT,
+                 font=("Microsoft YaHei UI", 10, "bold"),
+                 anchor="w").pack(fill="x", pady=(0, 8))
+        self.email_entry = tk.Entry(account, bg=CARD, fg=TEXT,
+                                    relief="flat", highlightbackground=BORDER,
+                                    highlightthickness=1,
+                                    font=("Microsoft YaHei UI", 9))
+        self.email_entry.insert(0, "邮箱")
+        self._add_placeholder(self.email_entry, "邮箱")
+        self.email_entry.pack(fill="x", ipady=6, pady=(0, 8))
+        self.password_entry = tk.Entry(account, bg=CARD, fg=TEXT, show="*",
+                                       relief="flat", highlightbackground=BORDER,
+                                       highlightthickness=1,
+                                       font=("Microsoft YaHei UI", 9))
+        self.password_entry.pack(fill="x", ipady=6, pady=(0, 8))
+        self.cloud_status = tk.Label(account, text="未登录", bg=CARD, fg=MUTED,
+                                     anchor="w",
+                                     font=("Microsoft YaHei UI", 9))
+        self.cloud_status.pack(fill="x", pady=(0, 8))
+        self.login_button = tk.Button(
+            account, text="登录并同步", bg=BLUE, fg="white",
+            activebackground="#3F58D8", activeforeground="white",
+            relief="flat", cursor="hand2", pady=7,
+            font=("Microsoft YaHei UI", 9, "bold"), command=self.login_cloud,
+        )
+        self.login_button.pack(fill="x", pady=(0, 6))
+        self.refresh_button = tk.Button(
+            account, text="刷新云端任务", bg=CARD, fg=BLUE,
+            relief="flat", cursor="hand2", pady=5,
+            font=("Microsoft YaHei UI", 9), command=self.refresh_cloud_tasks,
+        )
+        self.refresh_button.pack(fill="x")
+        if not self.cloud_config.configured:
+            self.login_button.configure(state="disabled")
+            self.refresh_button.configure(state="disabled")
+            self.cloud_status.configure(text="未配置 Supabase")
 
         main = tk.Frame(self.window, bg=BG)
         main.pack(side="left", fill="both", expand=True, padx=42, pady=30)
@@ -207,8 +251,7 @@ class TodoApp:
                 "reminder": self.reminder.get(),
                 "notified": False,
             })
-            due = " ".join(part for part in (date_text, time_text) if part)
-            self._save_tasks()
+            self._persist_task(task)
             self.refresh_task_list()
             self._reset_form()
             return
@@ -222,8 +265,15 @@ class TodoApp:
             "completed": False,
             "notified": False,
         }
+        if self._cloud_signed_in():
+            try:
+                task = self.cloud_client.add_task(task)  # type: ignore[union-attr]
+            except CloudTaskError as error:
+                messagebox.showerror("云端添加失败", str(error))
+                return
         self.tasks.append(task)
-        self._save_tasks()
+        if not self._cloud_signed_in():
+            self._save_tasks()
         self.refresh_task_list()
         self._reset_form()
         self._update_count()
@@ -277,7 +327,7 @@ class TodoApp:
         if task is None:
             return
         task["completed"] = not task["completed"]
-        self._save_tasks()
+        self._persist_task(task)
         self.refresh_task_list()
 
     def start_edit(self) -> None:
@@ -301,9 +351,16 @@ class TodoApp:
             return
         if not messagebox.askyesno("确认删除", f"确定删除“{task['title']}”吗？"):
             return
+        if self._cloud_signed_in():
+            try:
+                self.cloud_client.delete_task(task["id"])  # type: ignore[union-attr]
+            except CloudTaskError as error:
+                messagebox.showerror("云端删除失败", str(error))
+                return
         self.tasks.remove(task)
         self.task_list.delete(task["id"])
-        self._save_tasks()
+        if not self._cloud_signed_in():
+            self._save_tasks()
         self._update_count()
 
     def _load_tasks(self) -> None:
@@ -332,6 +389,61 @@ class TodoApp:
         except OSError as error:
             messagebox.showerror("保存失败", f"无法保存任务：\n{error}")
 
+    def login_cloud(self) -> None:
+        email = self.email_entry.get().strip()
+        password = self.password_entry.get()
+        if not email or email == "邮箱" or not password:
+            messagebox.showwarning("缺少账号", "请输入邮箱和密码。")
+            return
+        self.cloud_status.configure(text="正在登录…")
+        self.window.update_idletasks()
+        client = CloudTaskClient(
+            self.cloud_config.url,
+            self.cloud_config.publishable_key,
+        )
+        try:
+            client.sign_in(email, password)
+        except CloudTaskError as error:
+            self.cloud_status.configure(text="登录失败")
+            messagebox.showerror("登录失败", str(error))
+            return
+
+        self.cloud_client = client
+        self.cloud_status.configure(text=f"已登录：{email}")
+        self.refresh_cloud_tasks()
+
+    def refresh_cloud_tasks(self) -> None:
+        if not self._cloud_signed_in():
+            messagebox.showinfo("未登录", "请先登录云同步账号。")
+            return
+        self.cloud_status.configure(text="正在同步…")
+        self.window.update_idletasks()
+        try:
+            self.tasks = self.cloud_client.list_tasks()  # type: ignore[union-attr]
+        except CloudTaskError as error:
+            self.cloud_status.configure(text="同步失败")
+            messagebox.showerror("同步失败", str(error))
+            return
+        self.refresh_task_list()
+        self._update_count()
+        self.cloud_status.configure(
+            text=f"已同步：{len(self.tasks)} 个任务"
+        )
+
+    def _cloud_signed_in(self) -> bool:
+        return self.cloud_client is not None and self.cloud_client.signed_in
+
+    def _persist_task(self, task: dict) -> None:
+        if self._cloud_signed_in():
+            try:
+                updated = self.cloud_client.update_task(task)  # type: ignore[union-attr]
+            except CloudTaskError as error:
+                messagebox.showerror("云端保存失败", str(error))
+                return
+            task.update(updated)
+            return
+        self._save_tasks()
+
     def _check_reminders(self) -> None:
         now = datetime.now()
         changed = False
@@ -352,7 +464,15 @@ class TodoApp:
                 self.window.lift()
                 messagebox.showinfo("任务提醒", f"该处理任务了：\n\n{task['title']}")
         if changed:
-            self._save_tasks()
+            if self._cloud_signed_in():
+                for task in self.tasks:
+                    if task.get("notified"):
+                        try:
+                            self.cloud_client.update_task(task)  # type: ignore[union-attr]
+                        except CloudTaskError:
+                            pass
+            else:
+                self._save_tasks()
         self.window.after(1_000, self._check_reminders)
 
     def _reset_form(self) -> None:

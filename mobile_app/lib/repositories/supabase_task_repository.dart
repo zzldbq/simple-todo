@@ -19,13 +19,22 @@ class SupabaseTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<TodoTask> addTask(String title) async {
+  Future<TodoTask> addTask(
+    String title, {
+    DateTime? dueAt,
+    bool reminder = false,
+  }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
       throw const AuthException('请先登录');
     }
 
-    final task = TodoTask(id: 'pending', title: title);
+    final task = TodoTask(
+      id: 'pending',
+      title: title,
+      dueAt: dueAt,
+      reminder: reminder,
+    );
     final row = await _client
         .from('tasks')
         .insert(task.toSupabaseInsert(userId))

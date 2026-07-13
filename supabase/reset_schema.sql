@@ -1,6 +1,10 @@
--- Simple Todo v2.0 云数据库结构
+-- Simple Todo v2.0 开发期重建云数据库表
+-- 用途：当 Supabase 里的 tasks 表字段不完整或权限不对时，重新创建一张干净的表。
+-- 注意：这会删除 Supabase 云端 tasks 表里的现有任务数据。
 
-create table if not exists public.tasks (
+drop table if exists public.tasks cascade;
+
+create table public.tasks (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references auth.users(id) on delete cascade,
     title text not null check (char_length(trim(title)) > 0),
@@ -12,18 +16,13 @@ create table if not exists public.tasks (
     updated_at timestamptz not null default now()
 );
 
-create index if not exists tasks_user_id_idx on public.tasks(user_id);
-create index if not exists tasks_user_due_at_idx on public.tasks(user_id, due_at);
+create index tasks_user_id_idx on public.tasks(user_id);
+create index tasks_user_due_at_idx on public.tasks(user_id, due_at);
 
 alter table public.tasks enable row level security;
 
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.tasks to authenticated;
-
-drop policy if exists "Users can read their own tasks" on public.tasks;
-drop policy if exists "Users can create their own tasks" on public.tasks;
-drop policy if exists "Users can update their own tasks" on public.tasks;
-drop policy if exists "Users can delete their own tasks" on public.tasks;
 
 create policy "Users can read their own tasks"
 on public.tasks for select
@@ -58,7 +57,6 @@ begin
 end;
 $$;
 
-drop trigger if exists tasks_set_updated_at on public.tasks;
 create trigger tasks_set_updated_at
 before update on public.tasks
 for each row execute function public.set_updated_at();

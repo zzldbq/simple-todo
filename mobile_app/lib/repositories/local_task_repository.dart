@@ -33,9 +33,18 @@ class LocalTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<TodoTask> addTask(String title) async {
+  Future<TodoTask> addTask(
+    String title, {
+    DateTime? dueAt,
+    bool reminder = false,
+  }) async {
     final tasks = await listTasks();
-    final task = TodoTask(id: 'local-${_nextId++}', title: title);
+    final task = TodoTask(
+      id: 'local-${_nextId++}',
+      title: title,
+      dueAt: dueAt,
+      reminder: reminder,
+    );
     final updatedTasks = [task, ...tasks];
     await _save(updatedTasks);
     return task;

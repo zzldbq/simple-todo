@@ -16,8 +16,17 @@ class MemoryTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<TodoTask> addTask(String title) async {
-    final task = TodoTask(id: 'local-${_nextId++}', title: title);
+  Future<TodoTask> addTask(
+    String title, {
+    DateTime? dueAt,
+    bool reminder = false,
+  }) async {
+    final task = TodoTask(
+      id: 'local-${_nextId++}',
+      title: title,
+      dueAt: dueAt,
+      reminder: reminder,
+    );
     _tasks.insert(0, task);
     return task;
   }

@@ -298,6 +298,8 @@ class TaskHomePage extends StatefulWidget {
 class _TaskHomePageState extends State<TaskHomePage> {
   final TextEditingController _taskController = TextEditingController();
   late final TaskRepository _taskRepository;
+  DateTime? _selectedDueAt;
+  bool _reminderEnabled = false;
   List<TodoTask> _tasks = [];
   bool _isLoadingTasks = true;
   String? _taskError;
@@ -351,16 +353,79 @@ class _TaskHomePageState extends State<TaskHomePage> {
     }
 
     try {
-      final task = await _taskRepository.addTask(title);
+      final task = await _taskRepository.addTask(
+        title,
+        dueAt: _selectedDueAt,
+        reminder: _reminderEnabled && _selectedDueAt != null,
+      );
       if (!mounted) {
         return;
       }
 
       setState(() => _tasks = [task, ..._tasks]);
       _taskController.clear();
+      _clearTaskForm();
     } catch (_) {
       _showTaskError('添加任务失败');
     }
+  }
+
+  String get _dueAtLabel {
+    final dueAt = _selectedDueAt;
+    if (dueAt == null) {
+      return '选择日期和时间';
+    }
+
+    final year = dueAt.year.toString();
+    final month = dueAt.month.toString().padLeft(2, '0');
+    final day = dueAt.day.toString().padLeft(2, '0');
+    final hour = dueAt.hour.toString().padLeft(2, '0');
+    final minute = dueAt.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  Future<void> _pickDueAt() async {
+    final now = DateTime.now();
+    final initialDate = _selectedDueAt ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 10),
+    );
+
+    if (date == null || !mounted) {
+      return;
+    }
+
+    final initialTime = _selectedDueAt == null
+        ? TimeOfDay.fromDateTime(now)
+        : TimeOfDay.fromDateTime(_selectedDueAt!);
+    final time = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+
+    if (time == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedDueAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+  void _clearTaskForm() {
+    setState(() {
+      _selectedDueAt = null;
+      _reminderEnabled = false;
+    });
   }
 
   Future<void> _toggleTask(TodoTask task) async {
@@ -427,6 +492,33 @@ class _TaskHomePageState extends State<TaskHomePage> {
               border: OutlineInputBorder(),
             ),
             onSubmitted: (_) => _addTask(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickDueAt,
+                  icon: const Icon(Icons.event),
+                  label: Text(_dueAtLabel),
+                ),
+              ),
+              if (_selectedDueAt != null)
+                IconButton(
+                  onPressed: _clearTaskForm,
+                  icon: const Icon(Icons.close),
+                  tooltip: '清除时间',
+                ),
+            ],
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('提醒我'),
+            subtitle: const Text('先保存提醒设置，系统通知下一步接入'),
+            value: _reminderEnabled,
+            onChanged: _selectedDueAt == null
+                ? null
+                : (value) => setState(() => _reminderEnabled = value),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(

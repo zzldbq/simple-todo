@@ -65,16 +65,24 @@ flutter build apk --debug --dart-define=SUPABASE_URL=你的地址 --dart-define=
 
 ## 5. 当前状态
 
-手机端已经写好：
+截至 2026-07-13，手机端已经完成并实测：
 
 - Supabase 初始化
 - 登录
 - 注册
-- 任务云端仓库代码骨架
+- 任务云端新增、读取、完成、删除
+- 日期时间保存
+- 提醒开关保存
 
-还需要实测：
+已遇到并解决过的问题：
 
-- 注册账号
-- 登录账号
-- 云端任务新增、完成、删除
+- 第一次在 SQL Editor 中误粘贴了本地文件路径，导致 SQL 语法错误。
+- 后续出现过 `policy already exists`，说明部分表/策略已经存在。
+- 手机端出现过“任务加载失败/添加任务失败”，原因是 Supabase `tasks` 表字段或权限不完整。
+- 已新增 `supabase/reset_schema.sql`，开发期可以用它重建干净的 `tasks` 表。
+
+仍未完成：
+
 - Windows 和 Android 双向同步
+- Android 到点系统通知
+- 正式发布前的 release APK 构建与签名

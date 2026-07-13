@@ -29,3 +29,10 @@ python main.py
 ## 后续计划
 
 后续版本计划加入账号、云端同步和 Android 客户端，实现电脑与手机同步。
+
+## v2.0 开发文档
+
+- Android 真机测试：`docs/ANDROID_TESTING.md`
+- Supabase 云端配置：`docs/SUPABASE_SETUP.md`
+- 工具说明：`docs/TOOLS.md`
+- v2.0 架构设计：`docs/V2_DESIGN.md`

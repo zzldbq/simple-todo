@@ -17,7 +17,11 @@ function App() {
   const [dueAt, setDueAt] = useState('')
   const [reminder, setReminder] = useState(false)
   const [tasks, setTasks] = useState<TodoTask[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null)
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
 
   const completedCount = useMemo(
@@ -48,7 +52,7 @@ function App() {
       return
     }
 
-    setIsLoading(true)
+    setIsAuthLoading(true)
     try {
       const nextUser =
         authMode === 'login'
@@ -61,12 +65,12 @@ function App() {
     } catch (error) {
       setMessage(formatError(authMode === 'login' ? '登录失败' : '注册失败', error))
     } finally {
-      setIsLoading(false)
+      setIsAuthLoading(false)
     }
   }
 
   async function refreshTasks() {
-    setIsLoading(true)
+    setIsRefreshing(true)
     setMessage('')
     try {
       const nextTasks = await listTasks()
@@ -75,7 +79,7 @@ function App() {
     } catch (error) {
       setMessage(formatError('任务加载失败', error))
     } finally {
-      setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
@@ -88,7 +92,7 @@ function App() {
       return
     }
 
-    setIsLoading(true)
+    setIsAdding(true)
     try {
       const task = await addTask({
         title: trimmedTitle,
@@ -103,12 +107,12 @@ function App() {
     } catch (error) {
       setMessage(formatError('添加任务失败', error))
     } finally {
-      setIsLoading(false)
+      setIsAdding(false)
     }
   }
 
   async function handleToggleTask(task: TodoTask) {
-    setIsLoading(true)
+    setUpdatingTaskId(task.id)
     try {
       const updated = await toggleTask(task)
       setTasks((current) =>
@@ -117,12 +121,12 @@ function App() {
     } catch (error) {
       setMessage(formatError('更新任务失败', error))
     } finally {
-      setIsLoading(false)
+      setUpdatingTaskId(null)
     }
   }
 
   async function handleDeleteTask(taskId: string) {
-    setIsLoading(true)
+    setDeletingTaskId(taskId)
     try {
       await deleteTask(taskId)
       setTasks((current) => current.filter((task) => task.id !== taskId))
@@ -130,7 +134,7 @@ function App() {
     } catch (error) {
       setMessage(formatError('删除任务失败', error))
     } finally {
-      setIsLoading(false)
+      setDeletingTaskId(null)
     }
   }
 
@@ -168,8 +172,8 @@ function App() {
                 placeholder="请输入密码"
               />
             </label>
-            <button disabled={isLoading} type="submit">
-              {isLoading ? '处理中...' : authMode === 'login' ? '登录' : '注册'}
+            <button disabled={isAuthLoading} type="submit">
+              {isAuthLoading ? '处理中...' : authMode === 'login' ? '登录' : '注册'}
             </button>
           </form>
 
@@ -196,8 +200,8 @@ function App() {
           <p className="muted">{user.email}</p>
         </div>
         <div className="topbar-actions">
-          <button className="secondary" disabled={isLoading} onClick={refreshTasks}>
-            刷新
+          <button className="secondary" disabled={isRefreshing} onClick={refreshTasks}>
+            {isRefreshing ? '刷新中...' : '刷新'}
           </button>
           <button className="secondary" onClick={handleSignOut}>
             退出
@@ -232,8 +236,8 @@ function App() {
             />
             提醒我
           </label>
-          <button disabled={isLoading} type="submit">
-            添加任务
+          <button disabled={isAdding} type="submit">
+            {isAdding ? '添加中...' : '添加任务'}
           </button>
         </form>
       </section>
@@ -257,6 +261,7 @@ function App() {
                 <button
                   aria-label={task.completed ? '标记未完成' : '标记完成'}
                   className="check-button"
+                  disabled={updatingTaskId === task.id}
                   onClick={() => handleToggleTask(task)}
                   type="button"
                 >
@@ -268,10 +273,11 @@ function App() {
                 </div>
                 <button
                   className="danger"
+                  disabled={deletingTaskId === task.id}
                   onClick={() => handleDeleteTask(task.id)}
                   type="button"
                 >
-                  删除
+                  {deletingTaskId === task.id ? '删除中' : '删除'}
                 </button>
               </li>
             ))}

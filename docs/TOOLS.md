@@ -162,7 +162,51 @@
 - 项目作用：下载并管理 `platform-tools`、Android 平台和 build-tools。
 - 同类工具：Xcode Components、Visual Studio Installer、包管理器如 npm/pip（概念类似）。
 
-## 四、计划加入的企业实践
+## 四、Web 阶段工具
+
+### Node.js
+
+- 是什么：让 JavaScript 可以在电脑命令行中运行的运行环境。
+- 项目作用：运行前端开发工具、安装依赖和打包 Web 版。
+- 同类工具：Deno、Bun；浏览器也能运行 JavaScript，但不能替代本地构建环境。
+
+### npm
+
+- 是什么：Node.js 生态的软件包管理器。
+- 项目作用：安装 React、Vite、TypeScript、Supabase JS 等 Web 依赖。
+- 同类工具：pnpm、Yarn、Bun package manager。
+
+### React
+
+- 是什么：企业常用的前端 UI 框架。
+- 项目作用：构建 Web 版的登录页、任务页、按钮、输入框和任务列表。
+- 同类工具：Vue、Angular、Svelte。
+
+### Vite
+
+- 是什么：现代前端开发服务器和打包工具。
+- 项目作用：本地启动 Web 页面，并把 Web 版打包成可部署的静态文件。
+- 同类工具：Webpack、Parcel、Rspack、Next.js 内置构建工具。
+
+### TypeScript
+
+- 是什么：带类型检查的 JavaScript。
+- 项目作用：提前发现字段名、函数参数和数据结构错误，减少多端同步时的低级 bug。
+- 同类方案：普通 JavaScript、Flow；企业前端中 TypeScript 更常见。
+
+### Supabase JS
+
+- 是什么：Supabase 官方 JavaScript 客户端库。
+- 项目作用：让 Web 版在浏览器中登录账号、读取任务、添加任务和同步数据。
+- 同类工具：Firebase SDK、Appwrite SDK、Axios/fetch 调自建 API。
+
+### Vercel / Netlify / Cloudflare Pages / GitHub Pages
+
+- 是什么：常见 Web 静态站点托管平台。
+- 项目作用：后续把 Web 版部署成一个网址，让 iPhone、Mac、Windows、Android 都能访问。
+- 同类工具：自建 Nginx 服务器、对象存储静态网站、传统虚拟主机。
+
+## 五、计划加入的企业实践
 
 ### 自动化测试
 

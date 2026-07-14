@@ -175,16 +175,54 @@ VITE_SUPABASE_ANON_KEY
 
 建议步骤：
 
-1. 创建 `web_app`。
-2. 安装 React + Vite + TypeScript。
-3. 安装 Supabase JS。
-4. 建立 `task.ts` 类型。
-5. 建立 `authService.ts` 和 `taskService.ts`。
-6. 实现登录页。
-7. 实现任务页。
-8. 在电脑浏览器测试。
+1. 创建 `web_app`。（已完成）
+2. 安装 React + Vite + TypeScript。（已完成）
+3. 安装 Supabase JS。（已完成）
+4. 建立 `task.ts` 类型。（已完成）
+5. 建立 `authService.ts` 和 `taskService.ts`。（已完成）
+6. 实现登录页。（已完成首版）
+7. 实现任务页。（已完成首版）
+8. 在电脑浏览器测试。（下一步）
 9. 在 iPhone Safari 测试。
 10. 部署到公开网址。
+
+## 当前实现状态（2026-07-14）
+
+`web_app` 已创建并完成首版页面：
+
+- 登录 / 注册 / 退出。
+- 读取云端任务。
+- 添加任务。
+- 任务完成 / 未完成切换。
+- 删除任务。
+- 日期时间输入与展示。
+- 提醒开关保存。
+- 手动刷新。
+
+当前依赖版本：
+
+- React `19.2.7`
+- Vite `5.4.21`
+- TypeScript `5.9.3`
+- Supabase JS `2.84.0`
+
+版本选择说明：当前电脑 Node 是 `v21.7.1`，不是长期支持版。Vite 和 Supabase 最新版本更偏向 Node 22，所以本项目先固定到能稳定构建的版本。后续做 CI/CD 或长期 Web 开发时，建议安装 Node 22 LTS。
+
+已验证命令：
+
+```text
+npm run lint
+npm run build
+```
+
+下一步是本地运行：
+
+```text
+cd web_app
+npm run dev
+```
+
+然后在浏览器打开 Vite 给出的本地地址，使用和 Android/Windows 相同的 Supabase 账号登录测试。
 
 ## 暂不放进第一阶段
 

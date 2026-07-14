@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# Simple Todo Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+这是 Simple Todo 的 v3.0 Web 版。
 
-Currently, two official plugins are available:
+目标：让 Windows、Android、Web 使用同一个 Supabase 云端任务数据，并让 iPhone 可以先通过 Safari 浏览器使用。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 技术栈
 
-## React Compiler
+- React：页面 UI。
+- Vite：本地开发与打包。
+- TypeScript：类型检查。
+- Supabase JS：登录和云端任务同步。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 本地运行
 
-## Expanding the Oxlint configuration
+先准备本地配置：
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```text
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-publishable-or-anon-key
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+真实配置写到 `.env`，不要提交到 GitHub。
+
+运行：
+
+```powershell
+npm install
+npm run dev
+```
+
+构建检查：
+
+```powershell
+npm run lint
+npm run build
+```
+
+## 部署
+
+当前准备使用 GitHub Pages 部署。说明见：
+
+```text
+../docs/WEB_DEPLOYMENT.md
+```

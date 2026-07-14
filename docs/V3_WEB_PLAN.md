@@ -41,11 +41,98 @@ Web 版的限制：
 - 后端：继续使用 Supabase Auth + PostgreSQL
 - 部署：先本地运行，后续可部署到 Vercel、Netlify、Cloudflare Pages 或 GitHub Pages
 
+这些工具都是企业真实会使用的技术：
+
+- React：常见前端 UI 框架。
+- Vite：现代前端开发和构建工具，适合新项目。
+- TypeScript：企业前端常用，用类型减少低级错误。
+- Supabase JS：Supabase 官方 JavaScript 客户端。
+- Vercel / Netlify / Cloudflare Pages / GitHub Pages：常见 Web 托管平台。
+
 也可以考虑：
 
 - Flutter Web：复用一部分 Flutter 思路，但 Web 包体可能较大。
 - Vue + Vite：和 React 类似，也是常见 Web 前端方案。
 - Next.js：更完整，但对当前项目可能偏重。
+
+## 后续可扩展性原则
+
+v3.0 的技术选择不能只满足当前页面能跑，还要避免影响后续开发。当前方案不会阻碍后续功能，但实现时要遵守几个原则。
+
+### 1. Supabase 操作集中到服务层
+
+不要把数据库读写散落在页面组件里。建议结构：
+
+```text
+web_app/
+  src/
+    services/
+      authService.ts
+      taskService.ts
+    types/
+      task.ts
+    pages/
+    components/
+```
+
+页面只负责展示和交互，具体登录、读取任务、添加任务、删除任务都放到 `services` 中。
+
+好处：
+
+- 以后换后端时，主要改服务层。
+- 以后加缓存、错误处理、自动刷新时更容易。
+- 自动化测试更好写。
+
+### 2. 三端字段必须统一
+
+Web 版继续使用 Supabase `tasks` 表，不新建另一套字段。
+
+统一字段：
+
+| 字段 | 含义 | Web 版处理 |
+|---|---|---|
+| `id` | 任务 ID | 读取并作为列表 key |
+| `user_id` | 用户 ID | 由 Supabase 登录用户决定 |
+| `title` | 任务内容 | 必填，不能为空 |
+| `due_at` | 日期时间 | 使用 ISO 时间，展示时转成本地时间 |
+| `reminder` | 是否提醒 | 第一阶段保存开关，不做 Web Push |
+| `completed` | 是否完成 | 支持切换 |
+| `notified` | 是否已提醒 | 第一阶段保持兼容 |
+| `created_at` | 创建时间 | 用于排序 |
+| `updated_at` | 更新时间 | 后续冲突处理会用到 |
+
+### 3. 部署平台先不绑定死
+
+第一阶段只保证本地运行。部署时再从以下平台中选择：
+
+- Vercel
+- Netlify
+- Cloudflare Pages
+- GitHub Pages
+
+这样不会因为一开始选错平台而影响开发。
+
+### 4. 预留 PWA 和测试能力
+
+v3.0 第一阶段不做 PWA，但目录和构建方式要保留后续能力：
+
+- PWA：以后可添加到 iPhone 主屏幕。
+- 单元测试：可用 Vitest。
+- 浏览器端到端测试：可用 Playwright。
+- CI/CD：可用 GitHub Actions 自动构建和部署。
+
+### 5. 环境变量只放公开客户端配置
+
+Web 版只使用：
+
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+这些是客户端可公开配置。绝对不要在 Web 代码里放 `service_role key`。
+
+真正的数据安全继续依赖 Supabase RLS。
 
 ## v3.0 第一阶段功能
 
@@ -58,6 +145,46 @@ Web 版的限制：
 - 日期时间显示
 - 手动刷新
 - 与 Windows / Android 使用同一张 `tasks` 表
+
+## 页面草图
+
+第一阶段页面保持简单：
+
+```text
+┌────────────────────────────┐
+│ 简单待办                 退出 │
+├────────────────────────────┤
+│ 登录邮箱 / 当前账号          │
+├────────────────────────────┤
+│ [输入新任务.............]    │
+│ [选择日期时间] [提醒我]      │
+│ [添加任务]                  │
+├────────────────────────────┤
+│ 我的任务              [刷新] │
+│ □ 学习 Web 版               │
+│   07-14 20:00 / 未完成       │
+│ ✓ 已完成任务                │
+└────────────────────────────┘
+```
+
+先适配手机窄屏，再兼容电脑宽屏。
+
+## 开发顺序
+
+在流量网络下，先做不需要下载依赖的设计文档。等可以下载依赖后再开始创建项目。
+
+建议步骤：
+
+1. 创建 `web_app`。
+2. 安装 React + Vite + TypeScript。
+3. 安装 Supabase JS。
+4. 建立 `task.ts` 类型。
+5. 建立 `authService.ts` 和 `taskService.ts`。
+6. 实现登录页。
+7. 实现任务页。
+8. 在电脑浏览器测试。
+9. 在 iPhone Safari 测试。
+10. 部署到公开网址。
 
 ## 暂不放进第一阶段
 

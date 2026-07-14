@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,6 +26,18 @@ class SupabaseConfig {
   static const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
   static bool get isConfigured => url.isNotEmpty && anonKey.isNotEmpty;
+}
+
+String _formatNetworkError(String prefix, Object error) {
+  final message = error.toString();
+  if (message.contains('SocketException') ||
+      message.contains('Connection timed out') ||
+      message.contains('Failed host lookup') ||
+      message.contains('Network is unreachable')) {
+    return '$prefix：网络连接失败，请切换网络或稍后重试';
+  }
+
+  return '$prefix：$message';
 }
 
 class SimpleTodoMobileApp extends StatelessWidget {
@@ -83,17 +97,18 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      await Supabase.instance.client.auth
+          .signInWithPassword(email: email, password: password)
+          .timeout(const Duration(seconds: 15));
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on AuthException catch (error) {
       _showMessage(error.message);
-    } catch (_) {
-      _showMessage('登录失败，请稍后再试');
+    } on TimeoutException {
+      _showMessage('登录超时，请检查网络后重试');
+    } catch (error) {
+      _showMessage(_formatNetworkError('登录失败', error));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -182,18 +197,19 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: password,
-      );
+      await Supabase.instance.client.auth
+          .signUp(email: email, password: password)
+          .timeout(const Duration(seconds: 15));
       _showMessage('注册成功，请检查邮箱或直接登录');
       if (mounted) {
         Navigator.pop(context);
       }
     } on AuthException catch (error) {
       _showMessage(error.message);
-    } catch (_) {
-      _showMessage('注册失败，请稍后再试');
+    } on TimeoutException {
+      _showMessage('注册超时，请检查网络后重试');
+    } catch (error) {
+      _showMessage(_formatNetworkError('注册失败', error));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -302,6 +318,7 @@ class _TaskHomePageState extends State<TaskHomePage> {
   bool _reminderEnabled = false;
   List<TodoTask> _tasks = [];
   bool _isLoadingTasks = true;
+  bool _isRefreshingTasks = false;
   String? _taskError;
 
   @override
@@ -324,6 +341,11 @@ class _TaskHomePageState extends State<TaskHomePage> {
 
   Future<void> _loadTasks() async {
     try {
+      if (mounted) {
+        setState(() {
+          _isRefreshingTasks = true;
+        });
+      }
       final tasks = await _taskRepository.listTasks();
       if (!mounted) {
         return;
@@ -333,6 +355,7 @@ class _TaskHomePageState extends State<TaskHomePage> {
         _tasks = tasks;
         _taskError = null;
         _isLoadingTasks = false;
+        _isRefreshingTasks = false;
       });
     } catch (_) {
       if (!mounted) {
@@ -342,7 +365,15 @@ class _TaskHomePageState extends State<TaskHomePage> {
       setState(() {
         _taskError = '任务加载失败';
         _isLoadingTasks = false;
+        _isRefreshingTasks = false;
       });
+    }
+  }
+
+  Future<void> _refreshTasks({bool showMessage = false}) async {
+    await _loadTasks();
+    if (showMessage && mounted && _taskError == null) {
+      _showTaskError('已刷新任务');
     }
   }
 
@@ -476,82 +507,99 @@ class _TaskHomePageState extends State<TaskHomePage> {
         title: const Text('简单待办'),
         actions: [
           IconButton(
+            onPressed: _isRefreshingTasks
+                ? null
+                : () => _refreshTasks(showMessage: true),
+            icon: _isRefreshingTasks
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            tooltip: '刷新任务',
+          ),
+          IconButton(
             onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
             icon: const Icon(Icons.logout),
             tooltip: '退出',
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          TextField(
-            controller: _taskController,
-            decoration: const InputDecoration(
-              labelText: '输入新任务',
-              border: OutlineInputBorder(),
+      body: RefreshIndicator(
+        onRefresh: _refreshTasks,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextField(
+              controller: _taskController,
+              decoration: const InputDecoration(
+                labelText: '输入新任务',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) => _addTask(),
             ),
-            onSubmitted: (_) => _addTask(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _pickDueAt,
-                  icon: const Icon(Icons.event),
-                  label: Text(_dueAtLabel),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _pickDueAt,
+                    icon: const Icon(Icons.event),
+                    label: Text(_dueAtLabel),
+                  ),
                 ),
-              ),
-              if (_selectedDueAt != null)
-                IconButton(
-                  onPressed: _clearTaskForm,
-                  icon: const Icon(Icons.close),
-                  tooltip: '清除时间',
+                if (_selectedDueAt != null)
+                  IconButton(
+                    onPressed: _clearTaskForm,
+                    icon: const Icon(Icons.close),
+                    tooltip: '清除时间',
+                  ),
+              ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('提醒我'),
+              subtitle: const Text('先保存提醒设置，系统通知下一步接入'),
+              value: _reminderEnabled,
+              onChanged: _selectedDueAt == null
+                  ? null
+                  : (value) => setState(() => _reminderEnabled = value),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _addTask,
+              icon: const Icon(Icons.add),
+              label: const Text('添加任务'),
+            ),
+            const SizedBox(height: 24),
+            Text('我的任务', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            if (_isLoadingTasks)
+              const Padding(
+                padding: EdgeInsets.only(top: 32),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_taskError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 32),
+                child: Center(child: Text(_taskError!)),
+              )
+            else if (_tasks.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 32),
+                child: Center(child: Text('暂无任务')),
+              )
+            else
+              for (final task in _tasks)
+                TaskItem(
+                  task: task,
+                  onToggle: () => _toggleTask(task),
+                  onDelete: () => _deleteTask(task),
                 ),
-            ],
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('提醒我'),
-            subtitle: const Text('先保存提醒设置，系统通知下一步接入'),
-            value: _reminderEnabled,
-            onChanged: _selectedDueAt == null
-                ? null
-                : (value) => setState(() => _reminderEnabled = value),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: _addTask,
-            icon: const Icon(Icons.add),
-            label: const Text('添加任务'),
-          ),
-          const SizedBox(height: 24),
-          Text('我的任务', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          if (_isLoadingTasks)
-            const Padding(
-              padding: EdgeInsets.only(top: 32),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_taskError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: Center(child: Text(_taskError!)),
-            )
-          else if (_tasks.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 32),
-              child: Center(child: Text('暂无任务')),
-            )
-          else
-            for (final task in _tasks)
-              TaskItem(
-                task: task,
-                onToggle: () => _toggleTask(task),
-                onDelete: () => _deleteTask(task),
-              ),
-        ],
+          ],
+        ),
       ),
     );
   }

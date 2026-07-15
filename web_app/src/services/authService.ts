@@ -1,11 +1,11 @@
 import { supabase } from './supabaseClient'
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
+  const { data, error } = await supabase.auth.getSession()
   if (error) {
     return null
   }
-  return data.user
+  return data.session?.user ?? null
 }
 
 export async function signIn(email: string, password: string) {
@@ -16,6 +16,11 @@ export async function signIn(email: string, password: string) {
   if (error) {
     throw error
   }
+
+  if (!data.session || !data.user) {
+    throw new Error('登录会话无效，请重新登录')
+  }
+
   return data.user
 }
 
@@ -27,6 +32,11 @@ export async function signUp(email: string, password: string) {
   if (error) {
     throw error
   }
+
+  if (!data.session) {
+    return null
+  }
+
   return data.user
 }
 

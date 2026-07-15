@@ -16,18 +16,18 @@ export async function listTasks(): Promise<TodoTask[]> {
 
 export async function addTask(task: NewTodoTask): Promise<TodoTask> {
   const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
 
-  if (userError || !user) {
-    throw userError ?? new Error('请先登录')
+  if (sessionError || !session?.user) {
+    throw sessionError ?? new Error('登录状态已失效，请退出后重新登录')
   }
 
   const { data, error } = await supabase
     .from('tasks')
     .insert({
-      user_id: user.id,
+      user_id: session.user.id,
       title: task.title,
       due_at: task.due_at,
       reminder: task.reminder,

@@ -58,6 +58,14 @@ function App() {
         authMode === 'login'
           ? await signIn(email, password)
           : await signUp(email, password)
+
+      if (!nextUser) {
+        setAuthMode('login')
+        setPassword('')
+        setMessage('注册成功，请先打开邮箱确认链接，然后回到这里登录。')
+        return
+      }
+
       setUser(nextUser)
       setPassword('')
       setMessage(authMode === 'login' ? '登录成功' : '注册成功，可以开始同步任务')
